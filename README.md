@@ -188,6 +188,33 @@ https://xxxx.ngrok-free.app/callback
 
 ---
 
+## 向量資料庫更新
+
+`rag/faiss_db/` 已包含在版控中，一般情況下不需要重建。
+
+**僅在 `rag/source_docs/Panghu_schedule_database.md` 有更新時**，才需要重新執行：
+
+### 前置條件
+
+1. 登入 HuggingFace 並取得 `google/embeddinggemma-300m` 存取權限
+   - 申請：`https://huggingface.co/google/embeddinggemma-300m`
+2. 登入 HuggingFace CLI
+   ```bash
+   python -c "from huggingface_hub import login; login(token='你的token')"
+   ```
+
+### 重建向量庫
+
+```bash
+python rag/build_faiss.py
+```
+
+執行時間約 10–20 分鐘（含模型下載），完成後將 `rag/faiss_db/` 重新 commit 進版控。
+
+> 若原始文件（`rag/source_docs/Panghu_schedule_database.md`）有更新，需重新執行此腳本。
+
+---
+
 ## 各模組分工說明
 
 ### app.py — 對話狀態機
@@ -219,10 +246,11 @@ user_states = {
 
 ## 待開發項目
 
-- [ ] `services/rag_service.py` — 從 `Panghu_AI_Leader/main_core_code.py` 拆解整合
+- [x] `services/rag_service.py` — RAG 智慧查詢核心
+- [] `handlers/smart_query.py` — 智慧查詢對話流程
+- [x] `rag/build_faiss.py` — 向量資料庫建立腳本
 - [ ] `services/scenery_service.py` — 從 `information/scenery.py` 拆解服務層
 - [ ] `crawlers/scenery_crawler.py` — 從 `information/scenery.py` 拆解爬蟲腳本
-- [ ] `handlers/smart_query.py` — 智慧查詢對話流程
 - [ ] `handlers/transport_query.py` — 航班 + 潮汐整合查詢流程
 - [ ] `handlers/favorites.py` — 收藏清單 CRUD
 - [ ] `handlers/popular_trip.py` — 熱門行程展示
