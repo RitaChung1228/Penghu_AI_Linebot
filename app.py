@@ -114,12 +114,13 @@ def handle_text(event):
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    """接收 postback 事件（如收藏按鈕），交給 favorites handler 處理"""
+    """接收 postback 事件（如收藏、刪除、詳情按鈕），交給 favorites handler 處理"""
     favorites_handler.handle_postback(
         event.source.user_id,
         event.postback.data,
         event.reply_token,
-        reply
+        reply,
+        reply_flex
     )
 
 

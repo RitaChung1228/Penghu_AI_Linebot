@@ -7,24 +7,47 @@
 import json
 
 
-def get_trip_detail_carousel(trips):
+def get_trip_detail_carousel(trips, unfavorite=False):
     """
     將行程 list 轉為 carousel Flex Message dict。
 
     參數：
-        trips: list[dict]，每筆含 id、name、days、spots、image
-
-    回傳：
-        carousel dict，可傳入 reply_flex_fn
+        trips      : list[dict]，每筆含 id、name、days、spots、image
+        unfavorite : True 時 footer 顯示「取消收藏」，False 顯示「收藏行程」
     """
     return {
         "type": "carousel",
-        "contents": [_build_bubble(t) for t in trips]
+        "contents": [_build_bubble(t, unfavorite) for t in trips]
     }
 
 
-def _build_bubble(trip):
+def _build_bubble(trip, unfavorite=False):
     spots_text = "　".join(f"📍{s}" for s in trip["spots"])
+
+    if unfavorite:
+        footer_button = {
+            "type": "button",
+            "style": "primary",
+            "color": "#E05C5C",
+            "action": {
+                "type": "postback",
+                "label": "取消收藏",
+                "data": f"action=unfavorite&id={trip['id']}&name={trip['name']}",
+                "displayText": f"已取消收藏「{trip['name']}」"
+            }
+        }
+    else:
+        footer_button = {
+            "type": "button",
+            "style": "primary",
+            "color": "#4EADAC",
+            "action": {
+                "type": "postback",
+                "label": "⭐ 收藏行程",
+                "data": f"action=favorite&id={trip['id']}&name={trip['name']}",
+                "displayText": f"已收藏「{trip['name']}」"
+            }
+        }
 
     return {
         "type": "bubble",
@@ -66,19 +89,6 @@ def _build_bubble(trip):
         "footer": {
             "type": "box",
             "layout": "vertical",
-            "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#4EADAC",
-                    "action": {
-                        "type": "postback",
-                        "label": "⭐ 收藏行程",
-                        # postback data 以 URL query string 格式傳遞
-                        "data": f"action=favorite&id={trip['id']}&name={trip['name']}",
-                        "displayText": f"已收藏「{trip['name']}」"
-                    }
-                }
-            ]
+            "contents": [footer_button]
         }
     }
