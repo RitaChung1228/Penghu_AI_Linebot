@@ -16,10 +16,12 @@ from linebot.v3.messaging import (
     TextMessage as TextMsg,
     FlexMessage, FlexContainer
 )
-from linebot.v3.webhooks import MessageEvent, TextMessageContent
+from linebot.v3.webhooks import MessageEvent, TextMessageContent, PostbackEvent
 from dotenv import load_dotenv
 import handlers.smart_query as smart_query_handler
 import handlers.transport_query as transport_query_handler
+import handlers.popular_trip as popular_trip_handler
+import handlers.favorites as favorites_handler
 
 load_dotenv()
 
@@ -75,12 +77,19 @@ def handle_message(user_id, text, reply_token):
     """
     text = text.strip()
 
+    # ── 熱門行程 ──────────────────────────────────────────
+    if popular_trip_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
+        return
+
+    # ── 收藏清單 ──────────────────────────────────────────
+    if favorites_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
+        return
+
     # ── 交通查詢 ──────────────────────────────────────────
     if transport_query_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
         return
 
     # ── 智慧查詢 ──────────────────────────────────────────
-    # handle() 回傳 True 表示此訊息已處理，不需再往下判斷
     if smart_query_handler.handle(user_id, text, reply_token, user_states, reply, push):
         return
 
@@ -101,6 +110,17 @@ def callback():
 def handle_text(event):
     """接收文字訊息事件，取出 user_id、文字、reply_token 後傳入分派中心"""
     handle_message(event.source.user_id, event.message.text, event.reply_token)
+
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    """接收 postback 事件（如收藏按鈕），交給 favorites handler 處理"""
+    favorites_handler.handle_postback(
+        event.source.user_id,
+        event.postback.data,
+        event.reply_token,
+        reply
+    )
 
 
 if __name__ == "__main__":

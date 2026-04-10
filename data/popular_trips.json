@@ -1,1 +1,94 @@
-[]
+{
+  "nature": [
+    {
+      "id": "nature_1",
+      "name": "西嶼秘境一日遊",
+      "days": 1,
+      "spots": ["西台古堡", "漁翁島燈塔", "小門鯨魚洞"],
+      "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"
+    },
+    {
+      "id": "nature_2",
+      "name": "奎壁山潮間帶兩日遊",
+      "days": 2,
+      "spots": ["奎壁山摩西分海", "山水沙灘", "跨海大橋", "通樑古榕"],
+      "image": "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800"
+    },
+    {
+      "id": "nature_3",
+      "name": "南海離島三日遊",
+      "days": 3,
+      "spots": ["望安綠蠵龜", "七美雙心石滬", "東嶼坪嶼", "花嶼"],
+      "image": "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800"
+    }
+  ],
+  "culture": [
+    {
+      "id": "culture_1",
+      "name": "馬公老街文化半日遊",
+      "days": 1,
+      "spots": ["天后宮", "四眼井", "中央老街", "篤行十村"],
+      "image": "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800"
+    },
+    {
+      "id": "culture_2",
+      "name": "澎湖古蹟巡禮一日遊",
+      "days": 1,
+      "spots": ["澎湖開拓館", "順承門", "媽宮城牆", "西文里石滬"],
+      "image": "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800"
+    },
+    {
+      "id": "culture_3",
+      "name": "聚落人文兩日深度遊",
+      "days": 2,
+      "spots": ["二崁聚落", "赤馬村石敢當", "鎖港南北塔", "吉貝石滬群"],
+      "image": "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800"
+    }
+  ],
+  "food": [
+    {
+      "id": "food_1",
+      "name": "馬公海鮮市場半日遊",
+      "days": 1,
+      "spots": ["馬公第一漁市", "中正路海產街", "仁愛市場", "東文里鮮魚湯"],
+      "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
+    },
+    {
+      "id": "food_2",
+      "name": "澎湖特產美食一日遊",
+      "days": 1,
+      "spots": ["花枝丸老店", "仙人掌冰淇淋", "澎湖絲瓜料理", "黑糖糕伴手禮"],
+      "image": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800"
+    },
+    {
+      "id": "food_3",
+      "name": "海鮮 × 夜市兩日饗宴",
+      "days": 2,
+      "spots": ["澎湖花火節夜市", "中華路夜市", "活魚三吃餐廳", "龍蝦料理"],
+      "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800"
+    }
+  ],
+  "sea": [
+    {
+      "id": "sea_1",
+      "name": "吉貝浮潛半日遊",
+      "days": 1,
+      "spots": ["吉貝沙嘴", "浮潛體驗", "獨木舟", "水上摩托車"],
+      "image": "https://images.unsplash.com/photo-1530811755225-03d694fd9b6c?w=800"
+    },
+    {
+      "id": "sea_2",
+      "name": "小門嶼海上活動一日遊",
+      "days": 1,
+      "spots": ["小門鯨魚洞", "SUP立槳", "海底漫步", "珊瑚礁浮潛"],
+      "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800"
+    },
+    {
+      "id": "sea_3",
+      "name": "離島跳島海洋兩日遊",
+      "days": 2,
+      "spots": ["桶盤玄武岩浮潛", "虎井嶼潛水", "望安海龜生態", "七美珊瑚礁"],
+      "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"
+    }
+  ]
+}
