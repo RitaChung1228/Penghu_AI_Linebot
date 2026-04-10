@@ -14,7 +14,7 @@
 | 收藏清單 | 使用者個人收藏的行程或景點 |
 | 智慧查詢 | 輸入需求，AI 結合 RAG 生成客製化澎湖行程建議 |
 | 空房查詢 | 查詢澎湖飯店空房資訊 |
-| 交通查詢 | 查詢往返澎湖的航班時刻與潮汐安全通行時間 |
+| 交通查詢 | 查詢往返澎湖的航班時刻與島內交通資訊 |
 
 ---
 
@@ -46,7 +46,6 @@ LINE Platform
   │ airline_service  → 華信航空  │
   │ weather_service  → 氣象署API │
   │ tide_service     → 澎管處   │
-  │ scenery_service  → 景點資料  │
   │ rag_service      → RAG引擎  │
   └─────────────────────────────┘
         │
@@ -93,44 +92,42 @@ Penghu_linebot/
 ├── requirements.txt            # Python 套件清單
 │
 ├── handlers/                   # 對話流程控制器（管理「對話在哪一步、說什麼」）
-│   ├── popular_trip.py         # 熱門行程流程
-│   ├── favorites.py            # 收藏清單流程
 │   ├── smart_query.py          # 智慧查詢流程（呼叫 rag_service）
-│   ├── room_query.py           # 空房查詢流程
-│   └── transport_query.py      # 交通查詢流程（航班 + 潮汐）
+│   ├── transport_query.py      # 交通查詢流程（航班 + 島內交通）
+│   ├── popular_trip.py         # 熱門行程流程（待開發）
+│   ├── favorites.py            # 收藏清單流程（待開發）
+│   └── room_query.py           # 空房查詢流程（待開發）
 │
 ├── services/                   # 資料服務層（純函式，只負責取資料）
-│   ├── airline_service.py      # 華信航空航班爬蟲查詢
-│   ├── weather_service.py      # 中央氣象署天氣 API
+│   ├── airline_service.py      # 華信航空航班爬蟲（Selenium）
 │   ├── tide_service.py         # 澎管處潮汐爬蟲
-│   ├── scenery_service.py      # 景點資料讀取與查詢
+│   ├── weather_service.py      # 中央氣象署天氣 API
 │   └── rag_service.py          # RAG 智慧查詢核心（FAISS + Mistral pipeline）
 │
-├── rag/                        # RAG 相關資料（不含程式碼）
-│   ├── faiss_db/               # FAISS 向量資料庫（由 source_docs 建立）
+├── rag/                        # RAG 相關資料
+│   ├── faiss_db/               # FAISS 向量資料庫（已包含於版控）
 │   │   ├── index.faiss         # 向量索引
 │   │   └── index.pkl           # 文件對照表
-│   └── source_docs/            # 建立向量庫的原始文件
-│       └── Panghu_schedule_database.md   # 澎湖行程活動資料庫
+│   ├── source_docs/            # 建立向量庫的原始文件
+│   │   └── Panghu_schedule_database.md   # 澎湖行程活動資料庫
+│   └── build_faiss.py          # 向量資料庫重建腳本
 │
-├── flex/                       # LINE Flex Message JSON 模板
-│   ├── main_menu.py            # 五按鈕主選單
-│   ├── trip_card.py            # 行程輪播卡片
-│   └── hotel_card.py           # 飯店資訊卡片
+├── flex/                       # LINE Flex Message 模板
+│   ├── transport_menu.py       # 交通查詢選單（島內 + 入島）
+│   ├── main_menu.py            # 五按鈕主選單（待開發）
+│   ├── trip_card.py            # 行程輪播卡片（待開發）
+│   └── hotel_card.py           # 飯店資訊卡片（待開發）
 │
-├── data/                       # 靜態 JSON 資料檔（爬蟲產生或手動維護）
-│   ├── scenery_data.json       # 澎湖景點完整資料（scenery_crawler 產生）
-│   ├── popular_trips.json      # 熱門行程資料
-│   └── hotels.json             # 飯店基本資訊
+├── data/                       # 靜態 JSON 資料檔
+│   ├── popular_trips.json      # 熱門行程資料（待填入）
+│   └── hotels.json             # 飯店基本資訊（待填入）
 │
-├── storage/                    # 使用者持久化資料
+├── storage/                    # 使用者持久化資料（不進版控）
 │   └── favorites/              # 每位使用者的收藏清單
 │       └── {user_id}.json      # 以 LINE user_id 命名
 │
-├── crawlers/                   # 爬蟲腳本（手動執行以更新 data/）
-│   └── scenery_crawler.py      # 澎湖景點爬蟲（更新 scenery_data.json）
-│
-└── picture/                    # 圖片資源
+└── crawlers/                   # 爬蟲腳本（手動執行以更新 data/）
+    └── scenery_crawler.py      # 澎湖景點爬蟲（待開發）
 ```
 
 ---
@@ -142,14 +139,12 @@ Penghu_linebot/
 | Web 框架 | Flask |
 | LINE Bot SDK | line-bot-sdk v3 (Python) |
 | 語言模型 | Mistral (`ministral-8b-latest`) via aisuite |
-| 備援問答模型 | Google Gemini 2.0 Flash |
-| Embedding 模型 | `google/embeddinggemma-300m`（HuggingFace） |
+| Embedding 模型 | `google/embeddinggemma-300m`（HuggingFace，需申請存取權） |
 | 向量資料庫 | FAISS (Facebook AI Similarity Search) |
 | RAG 框架 | LangChain Community |
 | 天氣資料 | 中央氣象署開放資料平台 API |
-| 航班資料 | 華信航空官網爬蟲（BeautifulSoup） |
-| 景點資料 | 澎湖國家風景區管理處官網爬蟲 |
-| 潮汐資料 | 澎管處潮汐頁面爬蟲 |
+| 航班資料 | 華信航空官網爬蟲（Selenium + headless Chrome） |
+| 潮汐資料 | 澎管處潮汐頁面爬蟲（requests + BeautifulSoup） |
 | 本機測試 | ngrok（HTTPS tunnel） |
 
 ---
@@ -161,8 +156,8 @@ Penghu_linebot/
 ```env
 LINE_CHANNEL_ACCESS_TOKEN=your_token
 LINE_CHANNEL_SECRET=your_secret
-GEMINI_API_KEY=your_gemini_key
 MISTRAL_API_KEY=your_mistral_key
+HUGGINGFACE_HUB_TOKEN=your_hf_token
 OPENDATA_CWA_API_KEY=your_cwa_key
 ```
 
@@ -211,8 +206,6 @@ python rag/build_faiss.py
 
 執行時間約 10–20 分鐘（含模型下載），完成後將 `rag/faiss_db/` 重新 commit 進版控。
 
-> 若原始文件（`rag/source_docs/Panghu_schedule_database.md`）有更新，需重新執行此腳本。
-
 ---
 
 ## 各模組分工說明
@@ -223,8 +216,8 @@ python rag/build_faiss.py
 
 ```python
 user_states = {
-    "U1234": {"step": "smart_query"},
-    "U5678": {"step": "transport_departure", "trip": "single"},
+    "U1234": {"step": "smart_query_input"},
+    "U5678": {"step": "transport_flight_date", "departure": "TSA", "arrival": "MZG"},
 }
 ```
 
@@ -242,6 +235,11 @@ user_states = {
 - 提供 `rag_smart_reply(user_text: str) -> str` 單一入口
 - 內部執行 4 步驟 pipeline（需求分析 → RAG檢索 → 行程規劃 → 審查修正）
 
+### airline_service.py — 航班爬蟲
+
+- 使用 Selenium headless Chrome 操作華信航空官網
+- 對外提供 `search_flights(dep_code, arr_code, date_str)` 與 `format_result()` 兩個函式
+
 ---
 
 ## 待開發項目
@@ -249,9 +247,8 @@ user_states = {
 - [x] `services/rag_service.py` — RAG 智慧查詢核心
 - [] `handlers/smart_query.py` — 智慧查詢對話流程
 - [x] `rag/build_faiss.py` — 向量資料庫建立腳本
-- [ ] `services/scenery_service.py` — 從 `information/scenery.py` 拆解服務層
-- [ ] `crawlers/scenery_crawler.py` — 從 `information/scenery.py` 拆解爬蟲腳本
-- [ ] `handlers/transport_query.py` — 航班 + 潮汐整合查詢流程
+- [x] `handlers/transport_query.py` — 航班 + 島內交通查詢流程
+- [x] `flex/transport_menu.py` — 交通查詢 Flex Message 選單
 - [ ] `handlers/favorites.py` — 收藏清單 CRUD
 - [ ] `handlers/popular_trip.py` — 熱門行程展示
 - [ ] `handlers/room_query.py` — 空房查詢流程

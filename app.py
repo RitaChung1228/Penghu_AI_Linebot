@@ -13,11 +13,13 @@ from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.messaging import (
     ApiClient, Configuration, MessagingApi,
     ReplyMessageRequest, PushMessageRequest,
-    TextMessage as TextMsg
+    TextMessage as TextMsg,
+    FlexMessage, FlexContainer
 )
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
 from dotenv import load_dotenv
 import handlers.smart_query as smart_query_handler
+import handlers.transport_query as transport_query_handler
 
 load_dotenv()
 
@@ -50,6 +52,21 @@ def push(user_id, text):
             )
         )
 
+def reply_flex(reply_token, flex_dict, alt_text="選單"):
+    """即時回覆 Flex Message（bubble 或 carousel）"""
+    with ApiClient(configuration) as api_client:
+        MessagingApi(api_client).reply_message(
+            ReplyMessageRequest(
+                reply_token=reply_token,
+                messages=[
+                    FlexMessage(
+                        alt_text=alt_text,
+                        contents=FlexContainer.from_dict(flex_dict)
+                    )
+                ]
+            )
+        )
+
 
 def handle_message(user_id, text, reply_token):
     """
@@ -57,6 +74,10 @@ def handle_message(user_id, text, reply_token):
     依序呼叫各 handler，由 handler 回傳 True/False 決定是否繼續往下判斷。
     """
     text = text.strip()
+
+    # ── 交通查詢 ──────────────────────────────────────────
+    if transport_query_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
+        return
 
     # ── 智慧查詢 ──────────────────────────────────────────
     # handle() 回傳 True 表示此訊息已處理，不需再往下判斷
