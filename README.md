@@ -10,8 +10,8 @@
 
 | 功能 | 說明 |
 |------|------|
-| 熱門行程 | 推薦精選澎湖行程，以輪播卡片呈現 |
-| 收藏清單 | 使用者個人收藏的行程或景點 |
+| 熱門行程 | 四種行程類型輪播卡片，點入可瀏覽詳細行程並收藏 |
+| 收藏清單 | 顯示個人收藏的行程，支援查看詳情與刪除 |
 | 智慧查詢 | 輸入需求，AI 結合 RAG 生成客製化澎湖行程建議 |
 | 空房查詢 | 查詢澎湖飯店空房資訊 |
 | 交通查詢 | 查詢往返澎湖的航班時刻與島內交通資訊 |
@@ -27,13 +27,13 @@ LINE User
     │
     ▼
 LINE Platform
-    │  Webhook (HTTPS POST)
+    │  Webhook (HTTPS POST / Postback)
     ▼
 ┌─────────────────────────────────────────┐
 │  app.py  ─  Flask Webhook 入口          │
 │  user_states{}  ─  對話狀態機           │
 └────────────────┬────────────────────────┘
-                 │ 依 step 分派
+                 │ 依 step / postback 分派
         ┌────────┴────────┐
         ▼                 ▼
   handlers/           flex/
@@ -52,6 +52,29 @@ LINE Platform
         ▼
   rag/faiss_db/        data/
   FAISS 向量資料庫      靜態 JSON 資料
+```
+
+### 熱門行程 × 收藏流程
+
+```
+熱門行程
+    │
+    ▼
+四種行程類型卡片（自然 / 人文 / 美食 / 海上）
+    │  點選類型
+    ▼
+行程詳細 carousel（每張含圖片、天數、景點）
+    │  點「⭐ 收藏行程」（postback）
+    ▼
+寫入 storage/favorites/{user_id}.json
+
+收藏清單
+    │
+    ▼
+單一 bubble 列出所有收藏（每筆一行，旁邊有「詳情」「刪除」按鈕）
+    │  點「詳情」（postback）       點「刪除」（postback）
+    ▼                               ▼
+行程詳細卡片（含「取消收藏」按鈕）   從清單移除
 ```
 
 ### 智慧查詢 RAG 流程
@@ -91,11 +114,11 @@ Penghu_linebot/
 ├── .env                        # 環境變數（API Keys，不進版控）
 ├── requirements.txt            # Python 套件清單
 │
-├── handlers/                   # 對話流程控制器（管理「對話在哪一步、說什麼」）
+├── handlers/                   # 對話流程控制器
+│   ├── popular_trip.py         # 熱門行程：類型選單 → 行程詳細卡片
+│   ├── favorites.py            # 收藏清單：顯示 / 刪除 / 詳情（postback）
 │   ├── smart_query.py          # 智慧查詢流程（呼叫 rag_service）
 │   ├── transport_query.py      # 交通查詢流程（航班 + 島內交通）
-│   ├── popular_trip.py         # 熱門行程流程（待開發）
-│   ├── favorites.py            # 收藏清單流程（待開發）
 │   └── room_query.py           # 空房查詢流程（待開發）
 │
 ├── services/                   # 資料服務層（純函式，只負責取資料）
@@ -113,13 +136,14 @@ Penghu_linebot/
 │   └── build_faiss.py          # 向量資料庫重建腳本
 │
 ├── flex/                       # LINE Flex Message 模板
+│   ├── trip_card.py            # 熱門行程類型輪播卡片
+│   ├── trip_detail.py          # 行程詳細卡片（含收藏 / 取消收藏按鈕）
 │   ├── transport_menu.py       # 交通查詢選單（島內 + 入島）
 │   ├── main_menu.py            # 五按鈕主選單（待開發）
-│   ├── trip_card.py            # 行程輪播卡片（待開發）
 │   └── hotel_card.py           # 飯店資訊卡片（待開發）
 │
 ├── data/                       # 靜態 JSON 資料檔
-│   ├── popular_trips.json      # 熱門行程資料（待填入）
+│   ├── popular_trips.json      # 熱門行程資料（4 類型 × 3 筆）
 │   └── hotels.json             # 飯店基本資訊（待填入）
 │
 ├── storage/                    # 使用者持久化資料（不進版控）
@@ -210,20 +234,21 @@ python rag/build_faiss.py
 
 ## 各模組分工說明
 
-### app.py — 對話狀態機
+### app.py — 對話狀態機 + Postback 路由
 
-`user_states` dict 儲存每位使用者目前的對話步驟（`step`），根據 step 呼叫對應的 handler：
-
-```python
-user_states = {
-    "U1234": {"step": "smart_query_input"},
-    "U5678": {"step": "transport_flight_date", "departure": "TSA", "arrival": "MZG"},
-}
-```
+- `user_states` dict 儲存每位使用者目前的對話步驟
+- `MessageEvent` → `handle_message()` 依序呼叫各 handler
+- `PostbackEvent` → `favorites_handler.handle_postback()` 處理收藏/刪除/詳情
 
 ### handlers/ — 流程控制
 
-負責「問什麼問題、等什麼輸入、何時呼叫 service」，不處理資料取得邏輯。
+負責「問什麼問題、等什麼輸入、何時呼叫 service / flex」，不處理資料取得邏輯。
+
+### favorites.py — 收藏清單
+
+- 收藏清單以單一 bubble 呈現，每筆行程一行，旁邊有「詳情」「刪除」兩個按鈕
+- 點「詳情」→ 顯示行程卡片，footer 改為「取消收藏」（紅色）
+- 收藏資料儲存於 `storage/favorites/{user_id}.json`
 
 ### services/ — 資料服務
 
@@ -245,15 +270,17 @@ user_states = {
 ## 待開發項目
 
 - [x] `services/rag_service.py` — RAG 智慧查詢核心
-- [] `handlers/smart_query.py` — 智慧查詢對話流程
+- [x] `handlers/smart_query.py` — 智慧查詢對話流程
 - [x] `rag/build_faiss.py` — 向量資料庫建立腳本
 - [x] `handlers/transport_query.py` — 航班 + 島內交通查詢流程
 - [x] `flex/transport_menu.py` — 交通查詢 Flex Message 選單
-- [ ] `handlers/favorites.py` — 收藏清單 CRUD
-- [ ] `handlers/popular_trip.py` — 熱門行程展示
+- [x] `handlers/popular_trip.py` — 熱門行程展示
+- [x] `flex/trip_card.py` — 行程類型輪播卡片
+- [x] `flex/trip_detail.py` — 行程詳細卡片（含收藏/取消收藏）
+- [x] `handlers/favorites.py` — 收藏清單 CRUD
+- [x] `data/popular_trips.json` — 熱門行程資料（暫用測試資料）
 - [ ] `handlers/room_query.py` — 空房查詢流程
 - [ ] `flex/main_menu.py` — 主選單 Flex Message
-- [ ] `flex/trip_card.py` — 行程輪播卡片
 - [ ] `flex/hotel_card.py` — 飯店資訊卡片
-- [ ] `data/popular_trips.json` — 熱門行程資料填入
 - [ ] `data/hotels.json` — 飯店資訊填入
+- [ ] `data/popular_trips.json` — 替換為正式行程資料
