@@ -22,6 +22,7 @@ import handlers.smart_query as smart_query_handler
 import handlers.transport_query as transport_query_handler
 import handlers.popular_trip as popular_trip_handler
 import handlers.favorites as favorites_handler
+import handlers.room_query as room_query_handler
 
 load_dotenv()
 
@@ -83,6 +84,10 @@ def handle_message(user_id, text, reply_token):
 
     # ── 收藏清單 ──────────────────────────────────────────
     if favorites_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
+        return
+
+    # ── 空房查詢 ──────────────────────────────────────────
+    if room_query_handler.handle(user_id, text, reply_token, user_states, reply, push, reply_flex):
         return
 
     # ── 交通查詢 ──────────────────────────────────────────
