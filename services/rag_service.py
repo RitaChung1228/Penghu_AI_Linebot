@@ -132,6 +132,7 @@ def chat_with_schedule_rag(provider=provider, model=model, user_input="無特定
     return response.choices[0].message.content
 
 
+
 # ── 對外入口 ─────────────────────────────────────────
 
 def rag_smart_reply(user_text: str) -> str:
