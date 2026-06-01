@@ -7,7 +7,7 @@ Email 通知服務
 
 設定（.env）：
     SMTP_HOST     SMTP 伺服器，預設 smtp.gmail.com
-    SMTP_PORT     SMTP 埠號，預設 587（STARTTLS）
+    SMTP_PORT     不再使用，固定 port 465（SSL）
     SMTP_USER     寄件人帳號（Gmail 即 xxx@gmail.com）
     SMTP_PASS     寄件人密碼（Gmail 請用「應用程式密碼」）
     NOTIFY_EMAIL  負責人收件信箱
@@ -15,6 +15,7 @@ Email 通知服務
 
 import os
 import smtplib
+import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
@@ -109,7 +110,6 @@ def send_inquiry_email(order_no: str, favorites: list) -> None:
         Exception   若 SMTP 連線或傳送失敗
     """
     smtp_host    = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port    = int(os.getenv("SMTP_PORT", "587"))
     smtp_user    = os.getenv("SMTP_USER", "").strip()
     smtp_pass    = os.getenv("SMTP_PASS", "").strip()
     notify_email = os.getenv("NOTIFY_EMAIL", "").strip()
@@ -125,8 +125,7 @@ def send_inquiry_email(order_no: str, favorites: list) -> None:
     msg["To"]      = notify_email
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
-    with smtplib.SMTP(smtp_host, smtp_port) as server:
-        server.ehlo()
-        server.starttls()
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(smtp_host, 465, context=context) as server:
         server.login(smtp_user, smtp_pass)
         server.sendmail(smtp_user, notify_email, msg.as_string())
